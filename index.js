@@ -10,12 +10,10 @@ const cors = require("cors");
 const JwtStrategy = require("passport-jwt").Strategy;
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
-const path = require("path")
+const path = require("path");
 
 // This is your test secret API key.
-const stripe = require("stripe")(
-  process.env.STRIPE_SERVER_KEY
-);
+const stripe = require("stripe")(process.env.STRIPE_SERVER_KEY);
 
 app.use(express.static("public"));
 
@@ -32,14 +30,12 @@ const { isAuth, sanitizeUser, cookieExtractor } = require("./services/common");
 
 // Stripe intent
 
-
-
 const endpointSecret = process.env.ENDPOINT_SECRET;
 
 app.post(
   "/webhook",
   express.raw({ type: "application/json" }),
-  (request, response) => {
+  async (request, response) => {
     const sig = request.headers["stripe-signature"];
 
     let event;
@@ -55,6 +51,12 @@ app.post(
     switch (event.type) {
       case "payment_intent.succeeded":
         const paymentIntentSucceeded = event.data.object;
+
+        const order = await orderModel.findById(
+          paymentIntentSucceeded.metadata.orderId
+        );
+        order.paymentStatus = 'received'
+        await order.save()
         // Then define and call a function to handle the event payment_intent.succeeded
         break;
       // ... handle other event types
@@ -74,7 +76,7 @@ mongoose
   .catch((error) => console.error("MongoDB Connection Error:", error));
 
 // Middleware setup
-app.use(express.static(path.resolve(__dirname,"build")));
+app.use(express.static(path.resolve(__dirname, "build")));
 app.use(cookieParser());
 app.use(
   session({
@@ -179,7 +181,7 @@ passport.deserializeUser(function (user, cb) {
 // STRIPE JSON
 
 app.post("/create-payment-intent", async (req, res) => {
-  const {totalAmount,orderId} = req.body;
+  const { totalAmount, orderId } = req.body;
 
   // temp customer info
   const customer = await stripe.customers.create({
@@ -199,7 +201,7 @@ app.post("/create-payment-intent", async (req, res) => {
     description: "Software development services",
     customer: customer.id,
     metadata: {
-      orderId
+      orderId,
     },
     // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
     automatic_payment_methods: {
@@ -213,9 +215,9 @@ app.post("/create-payment-intent", async (req, res) => {
 });
 
 // for frontend build
-app.get('*',(req,res)=>{
-  res.sendFile(path.join(__dirname,'build', 'index.html'))
-})
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "build", "index.html"));
+});
 
 // Start the server
 app.listen(process.env.PORT, () => console.log("Server started on port 8080"));
