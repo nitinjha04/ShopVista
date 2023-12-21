@@ -181,6 +181,7 @@ passport.deserializeUser(function (user, cb) {
 app.post("/create-payment-intent", async (req, res) => {
   const {totalAmount,orderId} = req.body;
 
+  // temp customer info
   const customer = await stripe.customers.create({
     name: "Jenny Rosen",
     address: {
