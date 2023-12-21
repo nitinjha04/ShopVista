@@ -179,7 +179,7 @@ passport.deserializeUser(function (user, cb) {
 // STRIPE JSON
 
 app.post("/create-payment-intent", async (req, res) => {
-  const {totalAmount} = req.body;
+  const {totalAmount,orderId} = req.body;
 
   const customer = await stripe.customers.create({
     name: "Jenny Rosen",
@@ -197,6 +197,9 @@ app.post("/create-payment-intent", async (req, res) => {
     currency: "inr",
     description: "Software development services",
     customer: customer.id,
+    metadata: {
+      orderId
+    },
     // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
     automatic_payment_methods: {
       enabled: true,
@@ -207,6 +210,10 @@ app.post("/create-payment-intent", async (req, res) => {
     clientSecret: paymentIntent.client_secret,
   });
 });
+
+app.get('*',(req,res)=>{
+  res.sendFile(path.join(__dirname,'build', 'index.html'))
+})
 
 // Start the server
 app.listen(process.env.PORT, () => console.log("Server started on port 8080"));

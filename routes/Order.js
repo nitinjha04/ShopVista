@@ -10,7 +10,7 @@ const {
 
 const router = express.Router();
 
-router.get("/own/", fetchOrderByUser);
+router.get("/own", fetchOrderByUser);
 router.get("/", fetchAllOrders);
 router.get("/:id", fetchOrderById);
 router.post("/", createOrder);
