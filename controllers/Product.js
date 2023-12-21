@@ -58,7 +58,6 @@ const fetchAllProducts = async (req, res) => {
 
   const totalDocs = await totalProductsQuery.count().exec();
 
-  // console.log(totalDocs);A
 
   try {
     const docs = await query.exec();

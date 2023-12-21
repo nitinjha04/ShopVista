@@ -87,7 +87,7 @@ app.use(
 app.use(express.json()); // To parse req.body as JSON
 
 // CORS setup
-app.use(cors({ exposedHeaders: ["X-Total-Count"] })); // kya chahiye
+app.use(cors({ exposedHeaders: ["X-Total-Count"] }));
 
 // JWT Configuration
 const SECRET_KEY = "SECRET_KEY";
