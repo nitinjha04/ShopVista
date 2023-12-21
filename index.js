@@ -26,6 +26,7 @@ const authRouter = require("./routes/Auth");
 const cartRouter = require("./routes/Cart");
 const orderRouter = require("./routes/Order");
 const userModel = require("./models/User");
+const orderModel = require("./models/Order");
 const { isAuth, sanitizeUser, cookieExtractor } = require("./services/common");
 
 // Stripe intent
