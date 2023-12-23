@@ -51,7 +51,7 @@ const updateOrder = async (req, res) => {
     const order = await orderModel.findByIdAndUpdate(id, req.body, {
       new: true,
     });
-    console.log(order);
+    // console.log(order);
     // const result = await order.populate("product");
     res.status(200).json(order);
   } catch (error) {
