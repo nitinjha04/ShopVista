@@ -57,6 +57,16 @@ const productSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  colors: {
+    type: [Schema.Types.Mixed],
+  },
+  sizes: {
+    type: [Schema.Types.Mixed],
+  },
+  highlights: {
+    type: [String],
+  },
+  discountedPrice:{type:Number}
 });
 
 const virtual = productSchema.virtual("id");

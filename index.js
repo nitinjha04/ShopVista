@@ -12,6 +12,8 @@ const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const path = require("path");
 
+
+
 // This is your test secret API key.
 const stripe = require("stripe")(process.env.STRIPE_SERVER_KEY);
 
@@ -27,7 +29,7 @@ const cartRouter = require("./routes/Cart");
 const orderRouter = require("./routes/Order");
 const userModel = require("./models/User");
 const orderModel = require("./models/Order");
-const { isAuth, sanitizeUser, cookieExtractor } = require("./services/common");
+const { isAuth, sanitizeUser, cookieExtractor, invoiceTemplate } = require("./services/common");
 
 // Stripe intent
 
@@ -56,8 +58,8 @@ app.post(
         const order = await orderModel.findById(
           paymentIntentSucceeded.metadata.orderId
         );
-        order.paymentStatus = 'received'
-        await order.save()
+        order.paymentStatus = "received";
+        await order.save();
         // Then define and call a function to handle the event payment_intent.succeeded
         break;
       // ... handle other event types
@@ -93,7 +95,6 @@ app.use(express.json()); // To parse req.body as JSON
 app.use(cors({ exposedHeaders: ["X-Total-Count"] }));
 
 // JWT Configuration
-const SECRET_KEY = "SECRET_KEY";
 const opts = {
   jwtFromRequest: cookieExtractor,
   // secretOrKey: SECRET_KEY,
@@ -166,6 +167,11 @@ app.use("/auth", authRouter);
 app.use("/cart", isAuth(), cartRouter);
 app.use("/orders", isAuth(), orderRouter);
 
+// for frontend build
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "build", "index.html"));
+});
+
 // Passport serialization and deserialization
 passport.serializeUser(function (user, cb) {
   process.nextTick(function () {
@@ -215,10 +221,6 @@ app.post("/create-payment-intent", async (req, res) => {
   });
 });
 
-// for frontend build
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "build", "index.html"));
-});
 
 // Start the server
 app.listen(process.env.PORT, () => console.log("Server started on port 8080"));

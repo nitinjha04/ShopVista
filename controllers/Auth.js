@@ -2,7 +2,9 @@ require("dotenv").config();
 const userModel = require("../models/User");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
-const { sanitizeUser } = require("../services/common");
+const ejs = require("ejs");
+const fs = require("fs/promises");
+const { sanitizeUser, sendMail } = require("../services/common");
 
 const createUser = async (req, res) => {
   try {
@@ -17,7 +19,7 @@ const createUser = async (req, res) => {
         const user = new userModel({
           ...req.body,
           password: hashedPassword,
-          salt, 
+          salt,
         });
         const doc = await user.save();
 
@@ -25,13 +27,17 @@ const createUser = async (req, res) => {
           if (err) {
             res.status(400).json(err);
           } else {
-            const token = jwt.sign(sanitizeUser(doc), process.env.JWT_SECRET_KEY);
-            res.cookie("jwt", token, {
-              expires: new Date(Date.now() + 3600000),
-              httpOnly: true,
-            })
-            .status(200)
-            .json({id: doc.id, role: doc.role});
+            const token = jwt.sign(
+              sanitizeUser(doc),
+              process.env.JWT_SECRET_KEY
+            );
+            res
+              .cookie("jwt", token, {
+                expires: new Date(Date.now() + 3600000),
+                httpOnly: true,
+              })
+              .status(200)
+              .json({ id: doc.id, role: doc.role });
             // .json(token);
           }
         });
@@ -42,22 +48,108 @@ const createUser = async (req, res) => {
   }
 };
 const loginUser = async (req, res) => {
-  const user = req.user
+  const user = req.user;
   res
-    .cookie("jwt",user.token, {
+    .cookie("jwt", user.token, {
       expires: new Date(Date.now() + 3600000),
       httpOnly: true,
     })
     .status(201)
-    .json({id:user.id,role:user.role});
+    .json({ id: user.id, role: user.role });
 };
 const checkAuth = async (req, res) => {
-  if(req.user){
-    res.json(req.user)
-  }
-  else{
-    res.status(401)
+  if (req.user) {
+    res.json(req.user);
+  } else {
+    res.status(401);
   }
 };
+const resetPasswordRequest = async (req, res) => {
+  const email = req.body.email;
+  const user = await userModel.findOne({ email: email });
+  if (user) {
+    const token = crypto.randomBytes(48).toString("hex");
+    user.resetPasswordToken = token;
+    await user.save();
 
-module.exports = { createUser, loginUser, checkAuth };
+    // set token to url and email
+    const resetPage =
+      "http://localhost:3000/reset-password?token=" + token + "&email=" + email;
+    const subject = "reset password for ShopVista";
+
+    const data = await fs.readFile("./src/email.ejs", "utf8");
+
+    const html = ejs.render(data, { resetPage });
+
+    // email send and token in the mail body
+    if (req.body.email) {
+      const response = await sendMail({ to: req.body.email, subject, html });
+      res.send(response);
+    } else {
+      res.status(400);
+    }
+  } else {
+    res.status(400);
+  }
+};
+const resetPassword = async (req, res) => {
+  const { email, password, token } = req.body;
+  const user = await userModel.findOne({
+    email: email,
+    resetPasswordToken: token,
+  });
+  if (user) {
+    const salt = crypto.randomBytes(16);
+    crypto.pbkdf2(
+      password,
+      salt,
+      310000,
+      32,
+      "sha256",
+      async function (err, hashedPassword) {
+        user.password = hashedPassword;
+        user.salt = salt;
+        await user.save();
+
+        // set token to url and email
+        const subject = "Password successfully changed for ShopVista";
+
+        const data = await fs.readFile("./src/passwordSuccess.ejs", "utf8");
+
+        const html = ejs.render(data, { email:email });
+        // const html = `<p>Successfully able to Reset Password</p>`;
+
+        // email send and token in the mail body
+        if (email) {
+          const response = await sendMail({
+            to: email,
+            subject,
+            html,
+          });
+          res.send(response);
+        } else {
+          res.status(400);
+        }
+      }
+    );
+  } else {
+    res.status(400);
+  }
+};
+const logout = async (req, res) => {
+  res
+    .cookie("jwt", null, {
+      expires: new Date(Date.now()),
+      httpOnly: true,
+    })
+    .sendStatus(200);
+};
+
+module.exports = {
+  createUser,
+  loginUser,
+  checkAuth,
+  resetPasswordRequest,
+  resetPassword,
+  logout,
+};
