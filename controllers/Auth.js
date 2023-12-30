@@ -4,7 +4,12 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const ejs = require("ejs");
 const fs = require("fs/promises");
-const { sanitizeUser, sendMail, ResetSuccess, ResetReq } = require("../services/common");
+const {
+  sanitizeUser,
+  sendMail,
+  ResetSuccess,
+  ResetReq,
+} = require("../services/common");
 
 const createUser = async (req, res) => {
   try {
@@ -73,7 +78,7 @@ const resetPasswordRequest = async (req, res) => {
     await user.save();
 
     // set token to url and email
-    const resetPage =
+    const resetPageLink =
       "http://localhost:3000/reset-password?token=" + token + "&email=" + email;
     const subject = "reset password for ShopVista";
 
