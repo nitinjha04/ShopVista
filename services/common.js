@@ -834,7 +834,7 @@ a:hover {
             <tr style="">
               <td align="left" bgcolor="#ffffff" style="text-align:center; padding: 12px 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 17px; line-height: 20px;">
                 <p style="margin: 0;">Your Request to Change Password of shop pulse account is successfully Aprroved Click Reset to Proceed Further</p>
-<a href=${resetPageLink}>
+<a style="border:none" "color:blue" href=${resetPageLink}>
   Reset
 </a>
               </td>
