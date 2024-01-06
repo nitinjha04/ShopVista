@@ -97,7 +97,6 @@ app.use(cors({ exposedHeaders: ["X-Total-Count"] }));
 // JWT Configuration
 const opts = {
   jwtFromRequest: cookieExtractor,
-  // secretOrKey: SECRET_KEY,
   secretOrKey: process.env.JWT_SECRET_KEY,
 };
 
