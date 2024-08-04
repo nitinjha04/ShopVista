@@ -222,4 +222,4 @@ app.post("/create-payment-intent", async (req, res) => {
 
 
 // Start the server
-app.listen(process.env.PORT, () => console.log("Server started on port 8080"));
+app.listen(process.env.PORT, () => console.log(`Server started on port ${process.env.PORT}`));
