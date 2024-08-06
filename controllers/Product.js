@@ -2,7 +2,9 @@ const productModel = require("../models/Product");
 
 const createProduct = async (req, res) => {
   const product = new productModel(req.body);
-  product.discountPrice = Math.round(product.price*(1-product.discountPercentage/100))
+  product.discountPrice = Math.round(
+    product.price * (1 - product.discountPercentage / 100)
+  );
   try {
     const doc = await product.save();
     res.status(201).json(doc);
@@ -58,7 +60,11 @@ const fetchAllProducts = async (req, res) => {
     query = query.skip(skip).limit(limit);
   }
 
-  const totalDocs = await totalProductsQuery.count().exec();
+  let totalDocs = 0;
+
+  if (totalProductsQuery) {
+    totalDocs = await totalProductsQuery.countDocuments();
+  }
 
   try {
     const docs = await query.exec();
@@ -86,8 +92,10 @@ const updateProduct = async (req, res) => {
     const product = await productModel.findByIdAndUpdate(id, req.body, {
       new: true,
     });
-    product.discountPrice = Math.round(product.price*(1-product.discountPercentage/100))
-    const updatedProduct = await product.save()
+    product.discountPrice = Math.round(
+      product.price * (1 - product.discountPercentage / 100)
+    );
+    const updatedProduct = await product.save();
     res.status(200).json(updatedProduct);
   } catch (error) {
     res.status(400).json(error);

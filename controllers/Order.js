@@ -96,7 +96,8 @@ const fetchAllOrders = async (req, res) => {
     query = query.skip(skip).limit(limit);
   }
 
-  const totalDocs = await totalOrdersQuery.count().exec();
+
+  const totalDocs = await totalOrdersQuery.countDocuments()
 
   try {
     const docs = await query.exec();

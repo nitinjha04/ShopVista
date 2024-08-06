@@ -79,7 +79,7 @@ const resetPasswordRequest = async (req, res) => {
 
     // set token to url and email
     const resetPageLink =
-      "http://localhost:3000/reset-password?token=" + token + "&email=" + email;
+      "https://shop-vista-mern.vercel.app/reset-password?token=" + token + "&email=" + email;
     const subject = "reset password for ShopVista";
 
     const html = ResetReq(resetPageLink);

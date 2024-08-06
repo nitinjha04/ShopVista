@@ -12,8 +12,6 @@ const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const path = require("path");
 
-
-
 // This is your test secret API key.
 const stripe = require("stripe")(process.env.STRIPE_SERVER_KEY);
 
@@ -29,7 +27,12 @@ const cartRouter = require("./routes/Cart");
 const orderRouter = require("./routes/Order");
 const userModel = require("./models/User");
 const orderModel = require("./models/Order");
-const { isAuth, sanitizeUser, cookieExtractor, invoiceTemplate } = require("./services/common");
+const {
+  isAuth,
+  sanitizeUser,
+  cookieExtractor,
+  invoiceTemplate,
+} = require("./services/common");
 
 // Stripe intent
 
@@ -114,7 +117,8 @@ passport.use(
     try {
       const user = await userModel.findOne({ email: email }).exec();
       if (!user) {
-        done(null, false, { message: "No User Found" });
+        console.log("Authentication failed: No User Found");
+        return done(null, false, { message: "No User Found" });
       }
 
       crypto.pbkdf2(
@@ -124,18 +128,24 @@ passport.use(
         32,
         "sha256",
         async function (err, hashedPassword) {
+          if (err) {
+            console.error("Error during password hashing:", err);
+            return done(err);
+          }
           if (!crypto.timingSafeEqual(user.password, hashedPassword)) {
-            done(null, false, { message: "Wrong Password" });
+            console.log("Authentication failed: Wrong Password");
+            return done(null, false, { message: "Wrong Password" });
           }
           const token = jwt.sign(
             sanitizeUser(user),
             process.env.JWT_SECRET_KEY
           );
-          done(null, { id: user.id, role: user.role, token });
+          return done(null, { id: user.id, role: user.role, token });
         }
       );
     } catch (err) {
-      done(err);
+      console.error("Unexpected error during authentication:", err);
+      return done(err);
     }
   })
 );
@@ -221,5 +231,8 @@ app.post("/create-payment-intent", async (req, res) => {
 });
 
 
+
 // Start the server
-app.listen(process.env.PORT, () => console.log(`Server started on port ${process.env.PORT}`));
+app.listen(process.env.PORT, () =>
+  console.log(`Server started on port ${process.env.PORT}`)
+);
